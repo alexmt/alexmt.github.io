@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alexander Matyushentsev</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070b12;
+      --bg2: #0c1220;
+      --bg3: #111827;
+      --red: #e35654;
+      --red-dim: rgba(227, 86, 84, 0.15);
+      --white: #f0f4ff;
+      --gray: #8892a4;
+      --gray-dim: #3d4a5c;
+      --border: rgba(227, 86, 84, 0.25);
+      --pixel: 'Press Start 2P', monospace;
+      --sans: 'Space Grotesk', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Scanline overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    canvas#stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Reading progress bar */
+    #progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      width: 0%;
+      background: var(--red);
+      box-shadow: 0 0 10px var(--red);
+      z-index: 1001;
+      transition: width 0.1s;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      height: 60px;
+      background: rgba(7, 11, 18, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .nav-logo {
+      font-family: var(--pixel);
+      font-size: 10px;
+      color: var(--white);
+      text-decoration: none;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-logo span { color: var(--red); }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--gray);
+      text-decoration: none;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--white); }
+
+    .nav-cta {
+      font-family: var(--pixel);
+      font-size: 8px;
+      color: var(--white) !important;
+      background: var(--red);
+      padding: 10px 16px;
+      text-decoration: none;
+      transition: background 0.2s, box-shadow 0.2s !important;
+    }
+
+    .nav-cta:hover {
+      background: #c94442 !important;
+      box-shadow: 4px 4px 0 rgba(227,86,84,0.3) !important;
+    }
+
+    /* SECTIONS */
+    section {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 120px 48px;
+    }
+
+    section:first-of-type { padding-top: 160px; }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 2px;
+      background: var(--red);
+    }
+
+    .section-label span {
+      font-family: var(--pixel);
+      font-size: 9px;
+      color: var(--red);
+      letter-spacing: 2px;
+    }
+
+    h2.section-heading {
+      font-family: var(--sans);
+      font-size: clamp(36px, 5vw, 60px);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+
+    .section-sub {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--gray);
+      max-width: 540px;
+      line-height: 1.8;
+    }
+
+    /* HERO */
+    #hero {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 80px;
+      align-items: center;
+      min-height: 100vh;
+      padding-top: 120px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--red-dim);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      margin-bottom: 32px;
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--red);
+      letter-spacing: 1px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--red);
+      display: block;
+      animation: blink 1.5s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    h1 {
+      font-size: clamp(52px, 7vw, 88px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -3px;
+      margin-bottom: 8px;
+    }
+
+    h1 .lastname { color: var(--red); display: block; }
+
+    .hero-title {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 28px;
+      letter-spacing: 0.5px;
+    }
+
+    .hero-bio {
+      font-size: 16px;
+      color: #b0bac8;
+      max-width: 520px;
+      line-height: 1.75;
+      margin-bottom: 40px;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, auto);
+      gap: 32px;
+      margin-bottom: 40px;
+    }
+
+    .stat-item {}
+
+    .stat-value {
+      font-family: var(--pixel);
+      font-size: 18px;
+      color: var(--white);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .stat-value span { color: var(--red); }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--gray);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    .btn-primary {
+      font-family: var(--pixel);
+      font-size: 8px;
+      color: var(--white);
+      background: var(--red);
+      border: none;
+      padding: 14px 24px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 1px;
+    }
+
+    .btn-primary:hover {
+      background: #c94442;
+      box-shadow: 4px 4px 0 rgba(227,86,84,0.4);
+      transform: translate(-2px, -2px);
+    }
+
+    .btn-outline {
+      font-family: var(--pixel);
+      font-size: 8px;
+      color: var(--white);
+      background: transparent;
+      border: 2px solid var(--gray-dim);
+      padding: 14px 24px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 1px;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--white);
+      box-shadow: 4px 4px 0 rgba(255,255,255,0.1);
+      transform: translate(-2px, -2px);
+    }
+
+    .hero-photo-wrap {
+      position: relative;
+    }
+
+    .hero-photo {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+      filter: grayscale(20%);
+      border: 2px solid var(--gray-dim);
+      image-rendering: auto;
+    }
+
+    .hero-photo-border {
+      position: absolute;
+      inset: 0;
+      border: 2px solid var(--red);
+      transform: translate(10px, 10px);
+      z-index: -1;
+    }
+
+    .hero-tag {
+      position: absolute;
+      bottom: -20px;
+      left: -20px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+    }
+
+    .hero-tag-label {
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--red);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .hero-tag-value {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--gray);
+    }
+
+    /* TICKER */
+    .ticker-wrap {
+      position: relative;
+      z-index: 1;
+      background: var(--bg2);
+      border-top: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      overflow: hidden;
+      padding: 14px 0;
+    }
+
+    .ticker-track {
+      display: flex;
+      gap: 48px;
+      white-space: nowrap;
+      animation: ticker 30s linear infinite;
+    }
+
+    .ticker-item {
+      font-family: var(--pixel);
+      font-size: 8px;
+      color: var(--gray);
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ticker-item::before {
+      content: '▸';
+      color: var(--red);
+    }
+
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* BOOK */
+    .book-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      margin-top: 48px;
+    }
+
+    .book-card {
+      background: var(--bg2);
+      border: 1px solid var(--gray-dim);
+      padding: 40px;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .book-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 1px solid var(--red);
+      opacity: 0;
+      transition: opacity 0.2s;
+      transform: translate(6px, 6px);
+    }
+
+    .book-card:hover { transform: translate(-3px, -3px); }
+    .book-card:hover::after { opacity: 1; }
+
+    .book-tag {
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--red);
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .book-title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+
+    .book-desc {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--gray);
+      line-height: 1.8;
+      margin-bottom: 24px;
+    }
+
+    .book-info {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .book-info-item {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: #b0bac8;
+      line-height: 1.8;
+    }
+
+    .book-info-item strong {
+      color: var(--white);
+      display: block;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    /* OPEN SOURCE */
+    .oss-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .oss-card {
+      background: var(--bg2);
+      border: 1px solid var(--gray-dim);
+      padding: 32px;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .oss-card:hover {
+      border-color: var(--red);
+      transform: translate(-2px, -2px);
+      box-shadow: 4px 4px 0 var(--red-dim);
+    }
+
+    .oss-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .oss-name {
+      font-family: var(--pixel);
+      font-size: 10px;
+      color: var(--white);
+      letter-spacing: 1px;
+    }
+
+    .oss-stars {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--red);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .oss-desc {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--gray);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .oss-meta {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .oss-lang {
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--gray);
+      letter-spacing: 1px;
+    }
+
+    .oss-link {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--red);
+      text-decoration: none;
+      margin-left: auto;
+      transition: color 0.2s;
+    }
+
+    .oss-link:hover { color: var(--white); }
+
+    .oss-role {
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--gray-dim);
+      letter-spacing: 1px;
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* WRITING */
+    .writing-card {
+      background: var(--bg2);
+      border: 1px solid var(--gray-dim);
+      padding: 24px 28px;
+      text-decoration: none;
+      color: inherit;
+      flex: 1;
+      min-width: 240px;
+      max-width: 380px;
+      transition: all 0.2s;
+      display: block;
+    }
+
+    .writing-card:hover {
+      border-color: var(--red);
+      transform: translate(-2px, -2px);
+      box-shadow: 4px 4px 0 var(--red-dim);
+    }
+
+    .writing-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.4;
+      margin-top: 8px;
+    }
+
+    /* TALKS */
+    .talks-list {
+      margin-top: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .talk-item {
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      gap: 24px;
+      align-items: center;
+      padding: 20px 24px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .talk-item:hover {
+      background: var(--bg2);
+      border-color: var(--gray-dim);
+    }
+
+    .talk-item:hover .talk-arrow { opacity: 1; transform: translateX(0); }
+
+    .talk-num {
+      font-family: var(--pixel);
+      font-size: 9px;
+      color: var(--red);
+    }
+
+    .talk-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--white);
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+
+    .talk-meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 0.5px;
+    }
+
+    .talk-arrow {
+      font-family: var(--pixel);
+      font-size: 9px;
+      color: var(--red);
+      opacity: 0;
+      transform: translateX(-6px);
+      transition: all 0.2s;
+    }
+
+    /* EXPERIENCE */
+    .exp-list {
+      margin-top: 48px;
+      position: relative;
+    }
+
+    .exp-list::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--red), transparent);
+    }
+
+    .exp-item {
+      padding: 0 0 56px 40px;
+      position: relative;
+    }
+
+    .exp-item::before {
+      content: '';
+      position: absolute;
+      left: -4px;
+      top: 6px;
+      width: 9px; height: 9px;
+      background: var(--red);
+      image-rendering: pixelated;
+    }
+
+    .exp-period {
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--gray);
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .exp-role {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      letter-spacing: -0.5px;
+    }
+
+    .exp-company {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--red);
+      margin-bottom: 12px;
+      text-decoration: none;
+    }
+
+    .exp-company:hover { text-decoration: underline; }
+
+    .exp-desc {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--gray);
+      max-width: 600px;
+      line-height: 1.8;
+    }
+
+    .exp-highlights {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .exp-highlight {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #8892a4;
+      padding-left: 16px;
+      position: relative;
+      line-height: 1.6;
+    }
+
+    .exp-highlight::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--red);
+      font-size: 10px;
+    }
+
+    /* FOOTER */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-name {
+      font-family: var(--pixel);
+      font-size: 9px;
+      color: var(--gray);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--gray);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--red); }
+
+    /* FADE IN */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      nav { padding: 0 24px; }
+      nav .nav-links { display: none; }
+      #hero { grid-template-columns: 1fr; gap: 48px; }
+      .hero-photo-wrap { max-width: 300px; }
+      section { padding: 80px 24px; }
+      .book-grid { grid-template-columns: 1fr; }
+      .oss-grid { grid-template-columns: 1fr; }
+      footer { padding: 32px 24px; flex-direction: column; gap: 16px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<canvas id="stars"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">ALEX</a>
+  <ul class="nav-links">
+    <li><a href="#oss">Open Source</a></li>
+    <li><a href="#book">Book</a></li>
+    <li><a href="#writing">Writing</a></li>
+    <li><a href="#talks">Talks</a></li>
+    <li><a href="#experience">Experience</a></li>
+<li><a href="mailto:amatyushentsev@gmail.com" class="nav-cta">Get in touch →</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-left">
+    <div class="hero-badge">Co-founder at Akuity · GitOps &amp; Platform Engineering</div>
+    <h1>
+      Alexander
+      <span class="lastname">Matyushentsev</span>
+    </h1>
+    <p class="hero-title">Co-creator of Argo CD &nbsp;·&nbsp; Co-founder at Akuity &nbsp;·&nbsp; Author</p>
+    <p class="hero-bio">
+      I co-created Argo CD back when GitOps wasn't even a word most people used.
+      Didn't expect it to take off the way it did. Built Akuity on top of that —
+      co-founded it with two partners to turn what the community built into
+      something companies could rely on in production.
+    </p>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-value">40<span>K+</span></span>
+        <span class="stat-label">GitHub Stars</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">12<span>+</span></span>
+        <span class="stat-label">KubeCon Talks</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">1</span>
+        <span class="stat-label">Book Published</span>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <a href="mailto:amatyushentsev@gmail.com" class="btn-primary">Get in touch →</a>
+      <a href="https://www.linkedin.com/in/amatyushentsev/" target="_blank" class="btn-outline">LinkedIn →</a>
+      <a href="https://github.com/alexmt" target="_blank" class="btn-outline">GitHub →</a>
+      <a href="https://x.com/a_matyushentsev" target="_blank" class="btn-outline">X →</a>
+    </div>
+  </div>
+  <div class="hero-photo-wrap">
+    <img class="hero-photo" src="me.jpeg" alt="Alexander Matyushentsev">
+    <div class="hero-photo-border"></div>
+    <div class="hero-tag">
+      <span class="hero-tag-label">▸ CURRENT ROLE</span>
+      <span class="hero-tag-value">Co-founder &amp; Chief Architect, Akuity</span>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-track" id="ticker">
+    <span class="ticker-item">Argo CD Co-Creator</span>
+    <span class="ticker-item">22.5K Stars on Argo CD</span>
+    <span class="ticker-item">CNCF Graduated Project</span>
+    <span class="ticker-item">KubeCon Speaker</span>
+    <span class="ticker-item">GitOps &amp; Platform Engineering</span>
+    <span class="ticker-item">Co-founder at Akuity</span>
+    <span class="ticker-item">Manning Author</span>
+    <span class="ticker-item">Argo Workflows Co-Creator</span>
+    <span class="ticker-item">Open Source Believer</span>
+    <span class="ticker-item">20 Years in Engineering</span>
+    <!-- duplicate for seamless loop -->
+    <span class="ticker-item">Argo CD Co-Creator</span>
+    <span class="ticker-item">22.5K Stars on Argo CD</span>
+    <span class="ticker-item">CNCF Graduated Project</span>
+    <span class="ticker-item">KubeCon Speaker</span>
+    <span class="ticker-item">GitOps &amp; Platform Engineering</span>
+    <span class="ticker-item">Co-founder at Akuity</span>
+    <span class="ticker-item">Manning Author</span>
+    <span class="ticker-item">Argo Workflows Co-Creator</span>
+    <span class="ticker-item">Open Source Believer</span>
+    <span class="ticker-item">20 Years in Engineering</span>
+  </div>
+</div>
+
+<!-- OPEN SOURCE -->
+<section id="oss" class="fade-up">
+  <div class="section-label"><span>OPEN SOURCE</span></div>
+  <h2 class="section-heading">Building tools<br>the community ships on</h2>
+  <p class="section-sub">Core contributor and co-creator across the Argo project ecosystem — used by thousands of companies running Kubernetes in production.</p>
+  <div class="oss-grid">
+    <div class="oss-card">
+      <div class="oss-card-header">
+        <div>
+          <div class="oss-name">ARGO CD</div>
+          <span class="oss-role">▸ CO-CREATOR &amp; LEAD MAINTAINER</span>
+        </div>
+        <span class="oss-stars">★ 22.5K</span>
+      </div>
+      <p class="oss-desc">Declarative GitOps continuous delivery for Kubernetes. CNCF graduated project and the industry standard for GitOps deployments.</p>
+      <div class="oss-meta">
+        <span class="oss-lang">GO</span>
+        <a class="oss-link" href="https://github.com/argoproj/argo-cd" target="_blank">github →</a>
+      </div>
+    </div>
+    <div class="oss-card">
+      <div class="oss-card-header">
+        <div>
+          <div class="oss-name">ARGO WORKFLOWS</div>
+          <span class="oss-role">▸ CO-CREATOR</span>
+        </div>
+        <span class="oss-stars">★ 16.6K</span>
+      </div>
+      <p class="oss-desc">Container-native workflow engine for Kubernetes. The most popular workflow execution engine in the cloud-native ecosystem.</p>
+      <div class="oss-meta">
+        <span class="oss-lang">GO</span>
+        <a class="oss-link" href="https://github.com/argoproj/argo-workflows" target="_blank">github →</a>
+      </div>
+    </div>
+    <div class="oss-card">
+      <div class="oss-card-header">
+        <div>
+          <div class="oss-name">ARGO ROLLOUTS</div>
+          <span class="oss-role">▸ CONTRIBUTOR</span>
+        </div>
+        <span class="oss-stars">★ 3.4K</span>
+      </div>
+      <p class="oss-desc">Progressive delivery controller for Kubernetes. Supports blue/green, canary, and advanced rollout strategies with traffic management.</p>
+      <div class="oss-meta">
+        <span class="oss-lang">GO</span>
+        <a class="oss-link" href="https://github.com/argoproj/argo-rollouts" target="_blank">github →</a>
+      </div>
+    </div>
+    <div class="oss-card">
+      <div class="oss-card-header">
+        <div>
+          <div class="oss-name">NOTIFICATIONS ENGINE</div>
+          <span class="oss-role">▸ CREATOR</span>
+        </div>
+        <span class="oss-stars">★ 326</span>
+      </div>
+      <p class="oss-desc">Configuration-driven notification library for cloud-native applications. Powers alerting in Argo CD and Argo Rollouts across Slack, Teams, PagerDuty and more.</p>
+      <div class="oss-meta">
+        <span class="oss-lang">GO</span>
+        <a class="oss-link" href="https://github.com/argoproj/notifications-engine" target="_blank">github →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BOOK -->
+<section id="book" class="fade-up">
+  <div class="section-label"><span>PUBLISHED BOOK</span></div>
+  <h2 class="section-heading">GitOps and<br>Kubernetes</h2>
+  <div class="book-grid">
+    <a class="book-card" href="https://www.amazon.com/GitOps-Kubernetes-Continuous-Deployment-Jenkins-ebook/dp/B09781JFGT" target="_blank" style="text-decoration:none;color:inherit;">
+      <span class="book-tag">▸ MANNING PUBLICATIONS</span>
+      <div class="book-title">GitOps and Kubernetes</div>
+      <p class="book-desc">
+        Continuous Deployment with Argo CD, Jenkins X, and Flux. A comprehensive guide to
+        implementing GitOps practices at scale, written from the perspective of the engineers
+        who built the tools.
+      </p>
+      <a href="https://www.amazon.com/GitOps-Kubernetes-Continuous-Deployment-Jenkins-ebook/dp/B09781JFGT" target="_blank" class="btn-primary" style="display:inline-block;">Read on Amazon →</a>
+    </a>
+    <div class="book-info">
+      <div class="book-info-item">
+        <strong>What it covers</strong>
+        A practitioner's guide to GitOps — from Argo CD fundamentals to production deployment patterns,
+        progressive delivery, and building a platform engineering practice on top of Kubernetes.
+      </div>
+      <div class="book-info-item">
+        <strong>Who it's for</strong>
+        Platform engineers, DevOps teams, and architects who want to move beyond ad-hoc deployments
+        and build a reliable, auditable delivery system.
+      </div>
+      <div class="book-info-item">
+        <strong>Publisher</strong>
+        Manning Publications, 2021
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WRITING -->
+<section id="writing" class="fade-up">
+  <div class="section-label"><span>WRITING</span></div>
+  <h2 class="section-heading">Writing</h2>
+  <p class="section-sub">GitOps, platform engineering, and open-source — from the perspective of someone who built the tools.</p>
+  <div style="margin-top: 24px;">
+    <a href="https://medium.com/@amatyushentsev" target="_blank" class="btn-outline">Read on Medium →</a>
+  </div>
+</section>
+
+<!-- TALKS -->
+<section id="talks" class="fade-up">
+  <div class="section-label"><span>TALKS &amp; APPEARANCES</span></div>
+  <h2 class="section-heading">KubeCon &amp;<br>beyond</h2>
+  <p class="section-sub">Regular speaker at KubeCon, ArgoCon, and cloud-native events. Sharing what I learn building Argo and operating it at scale.</p>
+  <div class="talks-list">
+    <a class="talk-item" href="https://www.youtube.com/watch?v=iLSblVlU9cQ" target="_blank">
+      <span class="talk-num">01</span>
+      <div>
+        <div class="talk-title">ArgoCon EU | Argo CD Update</div>
+        <span class="talk-meta">ArgoCon Europe · 2026</span>
+      </div>
+      <span class="talk-arrow">→</span>
+    </a>
+    <a class="talk-item" href="https://www.youtube.com/watch?v=rUy7c6OpjMk" target="_blank">
+      <span class="talk-num">02</span>
+      <div>
+        <div class="talk-title">Offline, Not Off-Limits: Edge Fleet Management With Argo CD</div>
+        <span class="talk-meta">KubeCon North America · 2025</span>
+      </div>
+      <span class="talk-arrow">→</span>
+    </a>
+    <a class="talk-item" href="https://www.youtube.com/watch?v=bpsclYlGl2s" target="_blank">
+      <span class="talk-num">03</span>
+      <div>
+        <div class="talk-title">Mastering Efficiency in Argo CD: Scaling Smarter, Not Costlier</div>
+        <span class="talk-meta">KubeCon Europe · 2025</span>
+      </div>
+      <span class="talk-arrow">→</span>
+    </a>
+    <a class="talk-item" href="https://www.youtube.com/watch?v=9RvDczVIiS0" target="_blank">
+      <span class="talk-num">04</span>
+      <div>
+        <div class="talk-title">Mastering ApplicationSet: Advanced Argo CD Automation</div>
+        <span class="talk-meta">KubeCon North America · 2024</span>
+      </div>
+      <span class="talk-arrow">→</span>
+    </a>
+    <a class="talk-item" href="https://www.youtube.com/watch?v=nXEb1yZ580E" target="_blank">
+      <span class="talk-num">05</span>
+      <div>
+        <div class="talk-title">Argo CD Core — A Pure GitOps Agent for Kubernetes</div>
+        <span class="talk-meta">KubeCon Europe · 2023</span>
+      </div>
+      <span class="talk-arrow">→</span>
+    </a>
+    <a class="talk-item" href="https://www.youtube.com/watch?v=toqwPh19qL8" target="_blank">
+      <span class="talk-num">06</span>
+      <div>
+        <div class="talk-title">Supercharging Argo CD's Manifest Generation Capabilities</div>
+        <span class="talk-meta">KubeCon North America · 2022</span>
+      </div>
+      <span class="talk-arrow">→</span>
+    </a>
+    <a class="talk-item" href="https://www.youtube.com/watch?v=ohPKiGhhHoI" target="_blank">
+      <span class="talk-num">07</span>
+      <div>
+        <div class="talk-title">How To Build a Production Grade DevOps Platform</div>
+        <span class="talk-meta">KubeCon Europe · 2022</span>
+      </div>
+      <span class="talk-arrow">→</span>
+    </a>
+    <a class="talk-item" href="https://www.youtube.com/watch?v=EPtiDNXpS78" target="_blank">
+      <span class="talk-num">08</span>
+      <div>
+        <div class="talk-title">The Argo Ecosystem: Tailoring Your Installation Through Community</div>
+        <span class="talk-meta">ArgoCon · 2021</span>
+      </div>
+      <span class="talk-arrow">→</span>
+    </a>
+    <a class="talk-item" href="https://www.youtube.com/watch?v=gZ0MfSoHbY0" target="_blank">
+      <span class="talk-num">09</span>
+      <div>
+        <div class="talk-title">Easy Notifications for Kubernetes</div>
+        <span class="talk-meta">KubeCon North America · 2021</span>
+      </div>
+      <span class="talk-arrow">→</span>
+    </a>
+    <a class="talk-item" href="https://www.youtube.com/watch?v=r50tRQjisxw" target="_blank">
+      <span class="talk-num">10</span>
+      <div>
+        <div class="talk-title">Tutorial: Everything You Need To Become a GitOps Ninja</div>
+        <span class="talk-meta">KubeCon North America · 2019 &nbsp;·&nbsp; 18K views</span>
+      </div>
+      <span class="talk-arrow">→</span>
+    </a>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience" class="fade-up">
+  <div class="section-label"><span>EXPERIENCE</span></div>
+  <h2 class="section-heading">20 years building<br>things that scale</h2>
+  <div class="exp-list">
+    <div class="exp-item">
+      <span class="exp-period">2022 — PRESENT</span>
+      <div class="exp-role">Co-founder &amp; Chief Architect</div>
+      <a class="exp-company" href="https://akuity.io" target="_blank">Akuity</a>
+      <p class="exp-desc">Building the enterprise GitOps platform on top of Argo CD and Kargo. Leading product architecture and engineering, customer production deployments, and the AI agent layer (Akuity Intelligence).</p>
+    </div>
+    <div class="exp-item">
+      <span class="exp-period">2018 — 2022</span>
+      <div class="exp-role">Principal Software Engineer</div>
+      <a class="exp-company" href="https://www.intuit.com" target="_blank">Intuit</a>
+      <p class="exp-desc">Core engineer on Argo CD and Argo Rollouts. Ran Argo CD as a service for hundreds of developers at Intuit, powering 1,000+ deployments daily. Led GitOps adoption company-wide.</p>
+      <div class="exp-highlights">
+        <span class="exp-highlight">Led development of Argo CD — now the industry standard for GitOps on Kubernetes</span>
+        <span class="exp-highlight">Onboarded the first team at Intuit to Argo CD and drove widespread adoption</span>
+        <span class="exp-highlight">Contributed to Argo CD's growth outside Intuit into the broader cloud-native community</span>
+      </div>
+    </div>
+    <div class="exp-item">
+      <span class="exp-period">2016 — 2018</span>
+      <div class="exp-role">Member of Technical Staff</div>
+      <a class="exp-company" href="https://www.applatix.com" target="_blank">Applatix (acquired by Intuit)</a>
+      <p class="exp-desc">Early engineer on what became the Argo project. Prototyped the lightweight workflow engine design that became Argo Workflows. Led Argo v1/v2 UI development.</p>
+      <div class="exp-highlights">
+        <span class="exp-highlight">Prototyped the workflow engine architecture behind Argo Workflows</span>
+        <span class="exp-highlight">Led Argo v1 and v2 UI development from scratch</span>
+      </div>
+    </div>
+    <div class="exp-item">
+      <span class="exp-period">2011 — 2016</span>
+      <div class="exp-role">Senior Software Engineer</div>
+      <a class="exp-company" href="https://www.google.com" target="_blank">EPAM Systems / First Rain / Ooyala</a>
+      <p class="exp-desc">Contributed to DoubleClick Data Platform (Google/EPAM), sales intelligence APIs (First Rain), and content management systems (Ooyala). Built engineering experience across Java, Go, and distributed systems.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-name">ALEXANDER MATYUSHENTSEV</span>
+  <div class="footer-links">
+    <a href="https://github.com/alexmt" target="_blank">GitHub</a>
+    <a href="https://www.linkedin.com/in/amatyushentsev/" target="_blank">LinkedIn</a>
+    <a href="https://x.com/a_matyushentsev" target="_blank">X</a>
+    <a href="mailto:amatyushentsev@gmail.com">Email</a>
+  </div>
+</footer>
+
+<script>
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+    document.getElementById('progress-bar').style.width = scrolled + '%';
+  });
+
+  // Stars canvas
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function initStars() {
+    stars = [];
+    for (let i = 0; i < 120; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.5,
+        alpha: Math.random() * 0.5 + 0.1,
+        speed: Math.random() * 0.3 + 0.05
+      });
+    }
+  }
+
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(240, 244, 255, ${s.alpha})`;
+      ctx.fill();
+      s.y -= s.speed;
+      if (s.y < 0) { s.y = canvas.height; s.x = Math.random() * canvas.width; }
+    });
+    requestAnimationFrame(drawStars);
+  }
+
+  window.addEventListener('resize', () => { resize(); initStars(); });
+  resize();
+  initStars();
+  drawStars();
+
+  // Fade up on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Background -->
+  <rect width="32" height="32" fill="#070b12"/>
+  <!-- Pixel art "A" in red -->
+  <!-- Row 1 -->
+  <rect x="12" y="4" width="4" height="4" fill="#e35654"/>
+  <rect x="16" y="4" width="4" height="4" fill="#e35654"/>
+  <!-- Row 2 -->
+  <rect x="8"  y="8" width="4" height="4" fill="#e35654"/>
+  <rect x="20" y="8" width="4" height="4" fill="#e35654"/>
+  <!-- Row 3 (crossbar) -->
+  <rect x="8"  y="12" width="4" height="4" fill="#e35654"/>
+  <rect x="12" y="12" width="4" height="4" fill="#e35654"/>
+  <rect x="16" y="12" width="4" height="4" fill="#e35654"/>
+  <rect x="20" y="12" width="4" height="4" fill="#e35654"/>
+  <!-- Row 4 -->
+  <rect x="8"  y="16" width="4" height="4" fill="#e35654"/>
+  <rect x="20" y="16" width="4" height="4" fill="#e35654"/>
+  <!-- Row 5 -->
+  <rect x="8"  y="20" width="4" height="4" fill="#e35654"/>
+  <rect x="20" y="20" width="4" height="4" fill="#e35654"/>
+</svg>
